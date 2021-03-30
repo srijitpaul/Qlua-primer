@@ -1,0 +1,25 @@
+require "stdlib"
+require "lhpc/setup_util"
+require "gauge"
+require "lhpc/lhpc-std"
+require "lhpc/qdpc_io"
+
+-- Dimensions
+dims = {28, 28, 28, 96}
+
+-- Lattice init
+L = qcd.lattice(dims)
+Nd = #L
+
+volume = 1
+for i = 0, #L - 1 do
+  volume = volume * L[i]
+end
+printf("# [test] lattice volume = %d\n", volume)
+
+--read configuration (HERE YOU PUT THE LOCATION OF THE GAUGE CONFIGURATION)
+conf_name = "/run/media/srijit/data/configs/MILC/l2896f21b709m0062m031/l2896f21b709m0062m031.192"
+u = load_ildg(L, conf_name)
+
+--plaquette
+printf("# [test] Plaquette (original) = %12.10f\n", plaquette_full(u))

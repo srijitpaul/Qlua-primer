@@ -1,0 +1,57 @@
+-- ***********************************************************************************
+-- *
+-- ************************************************************************************
+function show_mem(name)
+  printf("# Memory usage at %s:\n", name);
+  for i,v in pairs(qcd.memory_usage()) do
+    printf("   %-20s %d\n", i, v)
+  end
+end
+-- ***********************************************************************************
+-- * Read a USQCD qdp propagator
+-- ***********************************************************************************
+function read_propagator(L, name)
+  printf("# Reading propagator :%s\n", name);
+  fP, finfo, rinfo = qcd.qdpcc.read_prop(L, name)
+  printf("File info: %s\n", finfo);
+  printf("r info: %s\n", rinfo);
+  return fP
+end
+
+-- ***********************************************************************************
+-- *
+-- ************************************************************************************
+function point_source (Lat, x,y,z,t)
+  G = Lat:DiracPropagator()
+  for icol  = 0, 2 do
+    for ispin = 0, 3 do
+      local dv = Lat:DiracFermion()
+      dv[{x, y, z, t, c=icol, d=ispin}] = complex(1, 0)
+      G[{c=icol,d=ispin}] = dv
+    end
+  end
+  return G
+end  -- * end of function point_source
+
+-- ************************************************************************************
+-- ************************************************************************************
+
+-- ************************************************************************************
+-- *
+-- ************************************************************************************
+function pack_propagator (L, vpacked, v, t0, dt)
+   
+  -- * loop on source - sink time separations
+  for dt_tmp = -dt+1, dt do
+
+    local t_tmp = ( t0 + dt_tmp + L[3] ) % L[3]
+    printf("# [pack_propagator] packing timslice t = %3d for t0 = %3d and dt = %3d\n", t_tmp, t0, dt_tmp )
+
+    L:Subset{axis=3, position = t_tmp}:where( 
+      function()
+        vpacked:set( v )
+      end
+    )
+
+    end -- of loop on source - sink time separations
+end  -- * end of function pack_propagator

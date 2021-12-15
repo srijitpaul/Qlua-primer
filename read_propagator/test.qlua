@@ -1,0 +1,21 @@
+
+-- ************************************************************************************
+-- * Prints information 
+-- ************************************************************************************
+
+total_timer = timer("total time")
+
+-- print parameters
+printf("# [test] Dimensions                = %d %d %d %d\n", dims[1], dims[2], dims[3], dims[4])
+printf("#\t light quark mass    = %g\n", mq_l)
+printf("#\t light quark kappa   = %g\n", kappa_l)
+printf("#\t Boundary condition  = %d, %d, %d, %d\n", quark_bc[1], quark_bc[2], quark_bc[3], quark_bc[4])
+
+-- ************************************************************************************
+-- * read propagator
+-- ************************************************************************************
+--read propagator (HERE YOU PUT THE LOCATION OF THE PROPAGATOR)
+prop_name = string.format("%s/%s", prop_name_prefix, prop_file)
+prop = read_propagator(L, prop_name)
+
+total_timer("done")

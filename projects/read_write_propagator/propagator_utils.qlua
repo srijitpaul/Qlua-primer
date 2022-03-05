@@ -1,0 +1,100 @@
+-- ***********************************************************************************
+-- *
+-- ************************************************************************************
+function show_mem(name)
+  printf("# Memory usage at %s:\n", name);
+  for i,v in pairs(qcd.memory_usage()) do
+    printf("   %-20s %d\n", i, v)
+  end
+end
+
+-- ***********************************************************************************
+-- ***********************************************************************************
+function write_propagator_lime (v, param)
+  
+    if string.find(param.name, "forward") then
+    filename = string.format("%s-%s.x%.2dy%.2dz%.2dt%.2d.lime", param.name, param.ensemble, param.src_pos[1], param.src_pos[2], param.src_pos[3], param.src_t)
+  elseif string.find(param.name, "twostep_sequential") then
+    filename = string.format("%s.%.4d.x%.2dy%.2dz%.2dt%.2d.px%.2dpy%.2dpz%.2d.kx%.2dky%.2dkz%.2d.lime", param.name, param.cfg,
+        param.src_pos[1], param.src_pos[2], param.src_pos[3], param.src_t,
+        param.mom[1], param.mom[2], param.mom[3], param.twostepmom[1], param.twostepmom[2], param.twostepmom[3]) 
+  elseif string.find(param.name, "sequential") then
+    filename = string.format("%s.%.4d.x%.2dy%.2dz%.2dt%.2d.px%.2dpy%.2dpz%.2d.lime", param.name, param.cfg,
+        param.src_pos[1], param.src_pos[2], param.src_pos[3], param.src_t,
+        param.mom[1], param.mom[2], param.mom[3])
+  elseif string.find(param.name, "stochastic_source") then
+    filename = string.format("%s.%.4d.%.5d.lime", param.name, param.cfg, param.sample)
+  elseif string.find(param.name, "stochastic_propagator") and not string.find(param.name, "oet") then
+    filename = string.format("%s.%.4d.%.5d.lime", param.name, param.cfg, param.sample)
+  elseif string.find(param.name, "stochastic_propagator") and string.find(param.name, "oet") then
+    filename = string.format("%s.%.4d.t%.2d.%.5d.px%.2dpy%.2dpz%.2d.s%.2d.lime", param.name, param.cfg, param.src_t, param.sample,
+        param.mom[1], param.mom[2], param.mom[3],param.spin)
+
+  
+    else
+    os.exit(1)
+  end
+ 
+  if not string.find(param.name, "stochastic") then  
+  printf("# [write_propagator] filename is %s\n", filename)
+  w_timer = timer("writing propagator")    
+  finfo = {["$tag"] = "DiracFermion", "QDP/C propagator test file"}                     
+                                                                                 
+  w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
+                                                                                 
+   --w:DiracFermion(src, xml.unparse({["$tag"] = "source"}))                     
+  for icol  = 0, 2 do                                                           
+	for ispin = 0, 3 do                                                           
+                                                                                 
+   		w:DiracFermion(v[{c=icol, d=ispin}], xml.unparse({["$tag"] = "Fermion"}))
+        end                                                                           
+  end                                                    
+   w:close()                         
+   w_timer("done")
+   else 
+   printf("# [write_fermion] filename is %s\n", filename)
+   w_timer = timer("writing propagator")
+   finfo = {["$tag"] = "DiracFermion", "QDP/C propagator test file"}
+   w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
+   w:DiracFermion(v, xml.unparse({["$tag"] = "Fermion"}))
+   w:close()
+   w_timer("done")
+   end
+end 
+-- ***********************************************************************************
+-- *
+-- ************************************************************************************
+function point_source (Lat, x,y,z,t)
+  G = Lat:DiracPropagator()
+  for icol  = 0, 2 do
+    for ispin = 0, 3 do
+      local dv = Lat:DiracFermion()
+      dv[{x, y, z, t, c=icol, d=ispin}] = complex(1, 0)
+      G[{c=icol,d=ispin}] = dv
+    end
+  end
+  return G
+end  -- * end of function point_source
+
+-- ************************************************************************************
+-- ************************************************************************************
+
+-- ************************************************************************************
+-- *
+-- ************************************************************************************
+function pack_propagator (L, vpacked, v, t0, dt)
+   
+  -- * loop on source - sink time separations
+  for dt_tmp = -dt+1, dt do
+
+    local t_tmp = ( t0 + dt_tmp + L[3] ) % L[3]
+    printf("# [pack_propagator] packing timslice t = %3d for t0 = %3d and dt = %3d\n", t_tmp, t0, dt_tmp )
+
+    L:Subset{axis=3, position = t_tmp}:where( 
+      function()
+        vpacked:set( v )
+      end
+    )
+
+    end -- of loop on source - sink time separations
+end  -- * end of function pack_propagator

@@ -1,0 +1,55 @@
+require "stdlib"
+require "lhpc/setup_util"
+require "gauge"
+require "lhpc/lhpc-std"
+require "lhpc/qdpc_io"
+--Param file for all the input which needs to be read
+
+--ensemble name
+--ensemble_name = "l1648f21b6572m0097m0484"
+conf_filename = "lat.sample.l88832.ildg"
+-- Dimensions
+dims = {8, 8, 8, 32}
+--network_dims={4, 4, 4, 12}
+
+-- Lattice init
+L = qcd.lattice(dims)
+Nd = #L
+volume = 1
+for i = 0, #L - 1 do
+  volume = volume * L[i]
+end
+printf("# [test] lattice volume = %d\n", volume)
+
+-- conf
+--n_conf = "100"
+conf_name_prefix = "../DATA"
+
+-- light quarks
+mq_l = 0.1
+kappa_l = 0.1 
+
+-- Sheikholeslami-Wohlert coefficient
+csw = 1.0
+
+-- Boundary conditions
+quark_bc = {1, 1, 1, -1}
+
+
+-- Multigrid solver parameters
+mg_block = {
+  {2,2,2,2},
+  {2,2,2,2}}
+
+mg_max_abserr = 1.e-22
+mg_max_relerr = 1.e-22
+
+-- Source Locations
+source_locations = { {t=32, pos={2, 4, 6}}, {t=3, pos={4, 1, 2}} }
+
+-- number of coherent sources
+n_coherent_source = 1
+
+-- I/O propagators
+write_forward_propagator = true
+light_propfile_prefix  = "forward_light"

@@ -1,0 +1,4 @@
+sequential_source_gamma_list = {
+  {tag="g5",   gamma={ 15,  1,  1}},
+  {tag="gtg5", gamma={  7, -1, -1}}
+}

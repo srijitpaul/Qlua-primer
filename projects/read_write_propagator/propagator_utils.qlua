@@ -36,31 +36,60 @@ function write_propagator_lime (v, param)
   end
  
   if not string.find(param.name, "stochastic") then  
-  printf("# [write_propagator] filename is %s\n", filename)
-  w_timer = timer("writing propagator")    
-  finfo = {["$tag"] = "DiracFermion", "QDP/C propagator test file"}                     
-                                                                                 
-  w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
-                                                                                 
-   --w:DiracFermion(src, xml.unparse({["$tag"] = "source"}))                     
-  for icol  = 0, 2 do                                                           
-	for ispin = 0, 3 do                                                           
-                                                                                 
-   		w:DiracFermion(v[{c=icol, d=ispin}], xml.unparse({["$tag"] = "Fermion"}))
-        end                                                                           
-  end                                                    
-   w:close()                         
-   w_timer("done")
-   else 
-   printf("# [write_fermion] filename is %s\n", filename)
-   w_timer = timer("writing propagator")
-   finfo = {["$tag"] = "DiracFermion", "QDP/C propagator test file"}
-   w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
-   w:DiracFermion(v, xml.unparse({["$tag"] = "Fermion"}))
-   w:close()
-   w_timer("done")
-   end
+  	printf("# [write_propagator] filename is %s\n", filename)
+  	w_timer = timer("writing propagator")    
+	finfo = {["$tag"] = "DiracFermion", "QDP/C propagator test file"}                     
+											 
+	w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
+											 
+	for icol  = 0, 2 do                                                           
+		for ispin = 0, 3 do                                                           
+											 
+			w:DiracFermion(v[{c=icol, d=ispin}], xml.unparse({["$tag"] = "Fermion"}))
+		end                                                                           
+	end                                                    
+	w:close()                         
+	w_timer("done")
+  else 
+  	printf("# [write_fermion] filename is %s\n", filename)
+  	w_timer = timer("writing fermion")
+  	finfo = {["$tag"] = "DiracFermion", "QDP/C fermion test file"}
+  	w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
+  	w:DiracFermion(v, xml.unparse({["$tag"] = "Fermion"}))
+  	w:close()
+  	w_timer("done")
+  end
 end 
+
+function write_propagator_ddpairs (src, prop, param)
+
+	if string.find(param.name, "forward") then
+    		filename = string.format("%s-%s.x%.2dy%.2dz%.2dt%.2d.ddpairs", param.name, param.ensemble, 
+			param.src_pos[1], param.src_pos[2], param.src_pos[3], param.src_t)
+    	else
+    		os.exit(1)
+  	end
+
+ 	tsrc = L:DiracPropagator()
+        L:Subset{axis=#L-1,position=param.src_t}:where(function() tsrc:set(src) end)
+
+  	if not string.find(param.name, "stochastic") then  
+  		printf("# [write_propagator] filename is %s\n", filename)
+  		w_timer = timer("writing propagator")    
+		finfo = "DD Pairs propagator test file"                     
+		qcd.ddpairs.write("double", filename, finfo, tsrc, "src info", param.src_t, prop, "prop info", "multi") 										 
+		w_timer("done")
+  	else 
+  		printf("# [write_fermion] filename is %s\n", filename)
+  		w_timer = timer("writing fermion")
+  		finfo = {["$tag"] = "DiracFermion", "QDP/C fermion test file"}
+  		w = qcd.qdpc.Writer(L, filename, xml.unparse(finfo))
+  		w:DiracFermion(v, xml.unparse({["$tag"] = "Fermion"}))
+  		w:close()
+  		w_timer("done")
+  	end
+end 
+
 -- ***********************************************************************************
 -- *
 -- ************************************************************************************
